@@ -93,7 +93,7 @@ const PostCard = ({ post, sessionId, onDeleted }) => {
       {post.imageUrl && (
         <div className="mb-3 rounded-lg overflow-hidden cursor-pointer" onClick={() => setImgExpanded(v => !v)}>
           <img
-            src={`${process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000'}${post.imageUrl}`}
+            src={post.imageUrl}
             alt="Post attachment"
             className="w-full object-cover transition-all duration-300"
             style={{ maxHeight: imgExpanded ? 'none' : '240px', borderRadius: '8px' }}

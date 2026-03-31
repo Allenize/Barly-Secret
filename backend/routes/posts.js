@@ -49,7 +49,25 @@ router.post('/', checkBlocked, upload.single('image'), filterContent, async (req
     const { content, sessionId } = req.body;
     if (!content || !sessionId) return res.status(400).json({ error: 'Content and sessionId required' });
 
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    let imageUrl = null;
+
+    if (req.file) {
+      const base64 = req.file.buffer.toString('base64');
+      const formData = new URLSearchParams();
+      formData.append('image', base64);
+      formData.append('key', process.env.IMGBB_API_KEY);
+
+      const imgRes = await fetch(`https://api.imgbb.com/1/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const imgData = await imgRes.json();
+      if (imgData.success) {
+        imageUrl = imgData.data.url;
+      } else {
+        return res.status(500).json({ error: 'Image upload failed' });
+      }
+    }
 
     const post = new Post({
       content,

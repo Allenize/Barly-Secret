@@ -12,7 +12,8 @@ const postSchema = new mongoose.Schema({
   anonUsername: { type: String, required: true },
   sessionId: { type: String, required: true },
   ipAddress: { type: String, required: true },
-  imageUrl: { type: String, default: null },
+  imageUrl: { type: String, default: null }, // base64 data URI
+  imageType: { type: String, default: null },
   reactions: [reactionSchema],
   commentCount: { type: Number, default: 0 },
   isHidden: { type: Boolean, default: false },
