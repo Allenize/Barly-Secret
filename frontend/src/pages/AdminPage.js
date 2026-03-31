@@ -41,7 +41,104 @@ const SectionHeader = ({ icon: Icon, title, count }) => (
   </div>
 );
 
+const ADMIN_PASSWORD = 'barly2024';
+
+const PasswordGate = ({ onUnlock }) => {
+  const [input, setInput] = useState('');
+  const [error, setError] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const handleSubmit = () => {
+    if (input === ADMIN_PASSWORD) {
+      onUnlock();
+    } else {
+      setError(true);
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      setTimeout(() => setError(false), 2000);
+    }
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', background: '#0a0a0f', padding: '1rem',
+    }}>
+      <div
+        style={{
+          width: '100%', maxWidth: 360,
+          background: 'rgba(26,26,38,0.9)',
+          border: `1px solid ${error ? 'rgba(255,107,107,0.5)' : 'rgba(124,107,255,0.3)'}`,
+          borderRadius: 20, padding: '2rem',
+          boxShadow: '0 0 40px rgba(0,0,0,0.4)',
+          animation: shake ? 'shake 0.4s ease' : 'none',
+          transition: 'border-color 0.3s ease',
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 14, margin: '0 auto 12px',
+            background: 'rgba(124,107,255,0.15)',
+            border: '1px solid rgba(124,107,255,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Shield size={24} style={{ color: '#7c6bff' }} />
+          </div>
+          <h2 style={{ margin: 0, color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>Admin Access</h2>
+          <p style={{ margin: '6px 0 0', color: '#6b6b8a', fontSize: '0.8rem' }}>Enter password to continue</p>
+        </div>
+
+        <input
+          type="password"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+          placeholder="Password"
+          autoFocus
+          style={{
+            width: '100%', padding: '10px 14px', borderRadius: 10,
+            background: 'rgba(42,42,61,0.6)',
+            border: `1px solid ${error ? 'rgba(255,107,107,0.5)' : 'rgba(42,42,61,0.8)'}`,
+            color: '#fff', fontSize: '0.9rem', outline: 'none',
+            boxSizing: 'border-box', marginBottom: '0.75rem',
+            transition: 'border-color 0.3s ease',
+          }}
+        />
+
+        {error && (
+          <p style={{ color: '#ff6b6b', fontSize: '0.78rem', margin: '0 0 0.75rem', textAlign: 'center' }}>
+            Incorrect password
+          </p>
+        )}
+
+        <button
+          onClick={handleSubmit}
+          style={{
+            width: '100%', padding: '10px', borderRadius: 10,
+            background: 'linear-gradient(135deg, rgba(124,107,255,0.3), rgba(74,63,160,0.3))',
+            border: '1px solid rgba(124,107,255,0.4)',
+            color: '#9d8fff', fontWeight: 600, fontSize: '0.9rem',
+            cursor: 'pointer', transition: 'all 0.2s ease',
+          }}
+        >
+          Unlock
+        </button>
+      </div>
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const AdminPage = () => {
+  const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState('ips'); // 'ips' | 'posts'
   const [ipList, setIpList] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -139,6 +236,8 @@ const AdminPage = () => {
       showToast('Failed to hide post', 'error');
     }
   };
+
+  if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
 
   return (
     <div className="max-w-4xl mx-auto px-4 pt-20 pb-12">
