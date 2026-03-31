@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a0a0f" />
+    <meta name="description" content="Barly Secret — Speak Freely. No Trace." />
+    <title>Barly Secret</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ['Syne', 'sans-serif'],
+              mono: ['Space Mono', 'monospace'],
+              body: ['DM Sans', 'sans-serif'],
+            },
+            colors: {
+              void: '#0a0a0f',
+              surface: '#12121a',
+              card: '#1a1a26',
+              border: '#2a2a3d',
+              accent: '#7c6bff',
+              'accent-dim': '#4a3fa0',
+              'accent-glow': '#9d8fff',
+              muted: '#6b6b8a',
+              ghost: '#3d3d5c',
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.4s ease-out',
+              'slide-up': 'slideUp 0.4s ease-out',
+              'pulse-slow': 'pulse 3s ease-in-out infinite',
+            },
+            keyframes: {
+              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+              slideUp: { '0%': { opacity: '0', transform: 'translateY(16px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        background-color: #0a0a0f;
+        color: #e8e8f0;
+        font-family: 'DM Sans', sans-serif;
+        margin: 0;
+      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #12121a; }
+      ::-webkit-scrollbar-thumb { background: #2a2a3d; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #7c6bff; }
+      .noise-bg::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+  <body class="noise-bg">
+    <div id="root"></div>
+  </body>
+</html>
