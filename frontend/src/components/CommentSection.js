@@ -2,12 +2,79 @@ import React, { useState, useEffect } from 'react';
 import { fetchComments, createComment } from '../utils/api';
 import { Send, MessageCircle, UserCircle2 } from 'lucide-react';
 
+const COMMENT_REACTIONS = [
+  { type: 'like', emoji: '👍' },
+  { type: 'haha', emoji: '😂' },
+  { type: 'wow', emoji: '😮' },
+  { type: 'sad', emoji: '😢' },
+];
+
 const timeAgo = (date) => {
   const diff = (Date.now() - new Date(date)) / 1000;
   if (diff < 60) return 'just now';
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
+};
+
+const CommentReactions = ({ commentId, sessionId }) => {
+  const storageKey = `cr_${commentId}`;
+  const storedRaw = localStorage.getItem(storageKey);
+  const stored = storedRaw ? JSON.parse(storedRaw) : { counts: {}, userReaction: null };
+
+  const [counts, setCounts] = useState(stored.counts || {});
+  const [userReaction, setUserReaction] = useState(stored.userReaction || null);
+
+  const handleReact = (type) => {
+    const newCounts = { ...counts };
+    let newUserReaction = userReaction;
+
+    if (userReaction === type) {
+      // toggle off
+      newCounts[type] = Math.max(0, (newCounts[type] || 0) - 1);
+      newUserReaction = null;
+    } else {
+      // remove old reaction
+      if (userReaction) {
+        newCounts[userReaction] = Math.max(0, (newCounts[userReaction] || 0) - 1);
+      }
+      newCounts[type] = (newCounts[type] || 0) + 1;
+      newUserReaction = type;
+    }
+
+    setCounts(newCounts);
+    setUserReaction(newUserReaction);
+    localStorage.setItem(storageKey, JSON.stringify({ counts: newCounts, userReaction: newUserReaction }));
+  };
+
+  return (
+    <div className="flex gap-1 mt-2 flex-wrap">
+      {COMMENT_REACTIONS.map(({ type, emoji }) => {
+        const count = counts[type] || 0;
+        const isActive = userReaction === type;
+        return (
+          <button
+            key={type}
+            onClick={() => handleReact(type)}
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-all duration-200"
+            style={{
+              background: isActive ? 'rgba(124,107,255,0.25)' : 'rgba(42,42,61,0.4)',
+              border: `1px solid ${isActive ? 'rgba(124,107,255,0.5)' : 'rgba(42,42,61,0.6)'}`,
+              cursor: 'pointer',
+              transform: isActive ? 'scale(1.08)' : 'scale(1)',
+            }}
+          >
+            <span style={{ fontSize: 12 }}>{emoji}</span>
+            {count > 0 && (
+              <span style={{ color: isActive ? '#9d8fff' : '#6b6b8a', fontFamily: 'Space Mono', fontWeight: 700, fontSize: 10 }}>
+                {count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
 };
 
 const CommentSection = ({ postId, sessionId, commentCount, onNewComment }) => {
@@ -108,6 +175,7 @@ const CommentSection = ({ postId, sessionId, commentCount, onNewComment }) => {
                     <span className="text-xs" style={{ color: '#3d3d5c' }}>{timeAgo(comment.createdAt)}</span>
                   </div>
                   <p className="text-sm leading-relaxed m-0" style={{ color: '#c8c8d8' }}>{comment.content}</p>
+                  <CommentReactions commentId={comment._id} sessionId={sessionId} />
                 </div>
               ))}
             </div>
