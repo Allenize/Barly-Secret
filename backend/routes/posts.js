@@ -139,26 +139,35 @@ router.post('/:id/react', checkBlocked, async (req, res) => {
     if (!post) return res.status(404).json({ error: 'Post not found' });
 
     const existingIndex = post.reactions.findIndex(r => r.sessionId === sessionId);
+    let newUserReaction = null;
+
     if (existingIndex !== -1) {
       if (post.reactions[existingIndex].type === type) {
         post.reactions.splice(existingIndex, 1);
+        newUserReaction = null;
       } else {
         post.reactions[existingIndex].type = type;
+        newUserReaction = type;
       }
     } else {
       post.reactions.push({ type, sessionId });
+      newUserReaction = type;
     }
 
     await post.save();
 
-    const updatedPost = await Post.findById(req.params.id).lean({ virtuals: true });
+    // Build counts manually to ensure accuracy
+    const counts = {};
+    REACTION_TYPES.forEach(t => { counts[t] = 0; });
+    post.reactions.forEach(r => { if (counts[r.type] !== undefined) counts[r.type]++; });
+
     if (req.app.get('io')) {
-      req.app.get('io').emit('post:reaction', { postId: post._id, reactionCounts: updatedPost.reactionCounts });
+      req.app.get('io').emit('post:reaction', { postId: post._id, reactionCounts: counts });
     }
 
     res.json({
-      reactionCounts: updatedPost.reactionCounts,
-      userReaction: post.reactions.find(r => r.sessionId === sessionId)?.type || null,
+      reactionCounts: counts,
+      userReaction: newUserReaction,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

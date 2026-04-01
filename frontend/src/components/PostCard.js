@@ -22,8 +22,8 @@ const PostCard = ({ post, sessionId, onDeleted }) => {
   const isOwner = post.sessionId === sessionId;
 
   const handleReact = async (type) => {
-    // Optimistic update
-    const prev = { ...reactionCounts };
+    // Optimistic update first
+    const prevCounts = { ...reactionCounts };
     const prevReaction = userReaction;
     const newCounts = { ...reactionCounts };
 
@@ -31,7 +31,9 @@ const PostCard = ({ post, sessionId, onDeleted }) => {
       newCounts[type] = Math.max(0, (newCounts[type] || 0) - 1);
       setUserReaction(null);
     } else {
-      if (prevReaction) newCounts[prevReaction] = Math.max(0, (newCounts[prevReaction] || 0) - 1);
+      if (prevReaction) {
+        newCounts[prevReaction] = Math.max(0, (newCounts[prevReaction] || 0) - 1);
+      }
       newCounts[type] = (newCounts[type] || 0) + 1;
       setUserReaction(type);
     }
@@ -39,11 +41,14 @@ const PostCard = ({ post, sessionId, onDeleted }) => {
 
     try {
       const data = await reactToPost(post._id, type);
-      setReactionCounts(data.reactionCounts);
-      setUserReaction(data.userReaction);
+      // Only update if server returned valid counts
+      if (data.reactionCounts && Object.keys(data.reactionCounts).length > 0) {
+        setReactionCounts(data.reactionCounts);
+      }
+      setUserReaction(data.userReaction ?? (prevReaction === type ? null : type));
     } catch (err) {
       // Revert on error
-      setReactionCounts(prev);
+      setReactionCounts(prevCounts);
       setUserReaction(prevReaction);
       console.error(err);
     }

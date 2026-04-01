@@ -5,7 +5,7 @@ const REACTIONS = [
   { type: 'cop',        emoji: '👮', label: 'Cop' },
   { type: 'hot',        emoji: '🥵', label: 'Hot' },
   { type: 'scared',     emoji: '😱', label: 'Scared' },
-  { type: 'suggestive', emoji: '👈👌', label: 'Suggestive' },
+  { type: 'suggestive', emoji: '👉👌', label: 'Suggestive' },
 ];
 
 const ReactionBar = ({ reactionCounts = {}, userReaction, onReact, disabled }) => {
