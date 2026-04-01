@@ -44,28 +44,37 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/posts
-router.post('/', checkBlocked, upload.single('image'), filterContent, async (req, res) => {
+router.post('/', checkBlocked, upload.single('media'), filterContent, async (req, res) => {
   try {
     const { content, sessionId } = req.body;
     if (!content || !sessionId) return res.status(400).json({ error: 'Content and sessionId required' });
 
     let imageUrl = null;
+    let videoUrl = null;
 
     if (req.file) {
-      const base64 = req.file.buffer.toString('base64');
-      const formData = new URLSearchParams();
-      formData.append('image', base64);
-      formData.append('key', process.env.IMGBB_API_KEY);
+      const isVideo = req.file.mimetype.startsWith('video/');
 
-      const imgRes = await fetch(`https://api.imgbb.com/1/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      const imgData = await imgRes.json();
-      if (imgData.success) {
-        imageUrl = imgData.data.url;
+      if (isVideo) {
+        // Store video as base64 data URI
+        videoUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
       } else {
-        return res.status(500).json({ error: 'Image upload failed' });
+        // Upload image to ImgBB
+        const base64 = req.file.buffer.toString('base64');
+        const formData = new URLSearchParams();
+        formData.append('image', base64);
+        formData.append('key', process.env.IMGBB_API_KEY);
+
+        const imgRes = await fetch(`https://api.imgbb.com/1/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+        const imgData = await imgRes.json();
+        if (imgData.success) {
+          imageUrl = imgData.data.url;
+        } else {
+          return res.status(500).json({ error: 'Image upload failed' });
+        }
       }
     }
 
@@ -75,6 +84,7 @@ router.post('/', checkBlocked, upload.single('image'), filterContent, async (req
       anonUsername: generateAnonUsername(),
       ipAddress: req.clientIP || '0.0.0.0',
       imageUrl,
+      videoUrl,
     });
 
     await post.save();

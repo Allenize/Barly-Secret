@@ -1,26 +1,31 @@
 import React, { useState, useRef } from 'react';
-import { X, Image, Send, Loader } from 'lucide-react';
+import { X, Image, Send, Loader, Video } from 'lucide-react';
 import { createPost } from '../utils/api';
 
 const CreatePost = ({ sessionId, onCreated, onClose }) => {
   const [content, setContent] = useState('');
-  const [image, setImage] = useState(null);
+  const [media, setMedia] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [mediaType, setMediaType] = useState(null); // 'image' | 'video'
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const fileRef = useRef();
+  const imgRef = useRef();
+  const vidRef = useRef();
 
-  const handleImage = (e) => {
+  const handleMedia = (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
-    setImage(file);
+    setMedia(file);
+    setMediaType(type);
     setPreview(URL.createObjectURL(file));
   };
 
-  const removeImage = () => {
-    setImage(null);
+  const removeMedia = () => {
+    setMedia(null);
     setPreview(null);
-    fileRef.current.value = '';
+    setMediaType(null);
+    if (imgRef.current) imgRef.current.value = '';
+    if (vidRef.current) vidRef.current.value = '';
   };
 
   const handleSubmit = async (e) => {
@@ -32,11 +37,11 @@ const CreatePost = ({ sessionId, onCreated, onClose }) => {
       const formData = new FormData();
       formData.append('content', content.trim());
       formData.append('sessionId', sessionId);
-      if (image) formData.append('image', image);
+      if (media) formData.append('media', media);
 
       const newPost = await createPost(formData);
       setContent('');
-      removeImage();
+      removeMedia();
       onCreated(newPost);
       onClose();
     } catch (err) {
@@ -62,9 +67,7 @@ const CreatePost = ({ sessionId, onCreated, onClose }) => {
             <h2 className="font-display font-bold text-base text-white m-0">New Post</h2>
             <p className="text-xs m-0" style={{ color: '#6b6b8a' }}>Posting anonymously — no trace</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg transition-all duration-200"
+          <button onClick={onClose} className="p-2 rounded-lg transition-all duration-200"
             style={{ background: 'none', border: 'none', color: '#6b6b8a', cursor: 'pointer' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(42,42,61,0.5)'; e.currentTarget.style.color = '#e8e8f0'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#6b6b8a'; }}
@@ -98,13 +101,15 @@ const CreatePost = ({ sessionId, onCreated, onClose }) => {
             </span>
           </div>
 
-          {/* Image preview */}
+          {/* Media preview */}
           {preview && (
             <div className="relative mt-3 rounded-xl overflow-hidden">
-              <img src={preview} alt="Preview" className="w-full object-cover rounded-xl" style={{ maxHeight: '200px' }} />
-              <button
-                type="button"
-                onClick={removeImage}
+              {mediaType === 'image' ? (
+                <img src={preview} alt="Preview" className="w-full object-cover rounded-xl" style={{ maxHeight: '200px' }} />
+              ) : (
+                <video src={preview} controls className="w-full rounded-xl" style={{ maxHeight: '200px' }} />
+              )}
+              <button type="button" onClick={removeMedia}
                 className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
                 style={{ background: 'rgba(10,10,15,0.8)', border: 'none', cursor: 'pointer', color: 'white' }}
               >
@@ -113,28 +118,35 @@ const CreatePost = ({ sessionId, onCreated, onClose }) => {
             </div>
           )}
 
-          {error && (
-            <p className="mt-2 text-xs" style={{ color: '#ff6b6b' }}>{error}</p>
-          )}
+          {error && <p className="mt-2 text-xs" style={{ color: '#ff6b6b' }}>{error}</p>}
 
           {/* Footer */}
           <div className="flex items-center justify-between mt-4">
-            <button
-              type="button"
-              onClick={() => fileRef.current.click()}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all duration-200"
-              style={{ background: 'none', border: '1px solid rgba(42,42,61,0.6)', color: '#6b6b8a', cursor: 'pointer' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(124,107,255,0.4)'; e.currentTarget.style.color = '#9d8fff'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(42,42,61,0.6)'; e.currentTarget.style.color = '#6b6b8a'; }}
-            >
-              <Image size={14} />
-              <span>{image ? 'Change image' : 'Add image'}</span>
-            </button>
-            <input type="file" ref={fileRef} accept="image/*" onChange={handleImage} className="hidden" />
+            <div className="flex gap-2">
+              <button type="button" onClick={() => imgRef.current.click()}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all duration-200"
+                style={{ background: 'none', border: '1px solid rgba(42,42,61,0.6)', color: '#6b6b8a', cursor: 'pointer' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(124,107,255,0.4)'; e.currentTarget.style.color = '#9d8fff'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(42,42,61,0.6)'; e.currentTarget.style.color = '#6b6b8a'; }}
+              >
+                <Image size={14} />
+                <span>Image</span>
+              </button>
+              <button type="button" onClick={() => vidRef.current.click()}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all duration-200"
+                style={{ background: 'none', border: '1px solid rgba(42,42,61,0.6)', color: '#6b6b8a', cursor: 'pointer' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(124,107,255,0.4)'; e.currentTarget.style.color = '#9d8fff'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(42,42,61,0.6)'; e.currentTarget.style.color = '#6b6b8a'; }}
+              >
+                <Video size={14} />
+                <span>Video</span>
+              </button>
+            </div>
 
-            <button
-              type="submit"
-              disabled={!content.trim() || submitting}
+            <input type="file" ref={imgRef} accept="image/*" onChange={e => handleMedia(e, 'image')} className="hidden" />
+            <input type="file" ref={vidRef} accept="video/*" onChange={e => handleMedia(e, 'video')} className="hidden" />
+
+            <button type="submit" disabled={!content.trim() || submitting}
               className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200"
               style={{
                 background: content.trim() && !submitting ? 'linear-gradient(135deg, #7c6bff, #4a3fa0)' : 'rgba(42,42,61,0.5)',

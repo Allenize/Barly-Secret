@@ -18,15 +18,33 @@ const PostCard = ({ post, sessionId, onDeleted }) => {
   const [userReaction, setUserReaction] = useState(post.userReaction || null);
   const [commentCount, setCommentCount] = useState(post.commentCount || 0);
   const [deleting, setDeleting] = useState(false);
-  const [imgExpanded, setImgExpanded] = useState(false);
+  const [mediaExpanded, setMediaExpanded] = useState(false);
   const isOwner = post.sessionId === sessionId;
 
   const handleReact = async (type) => {
+    // Optimistic update
+    const prev = { ...reactionCounts };
+    const prevReaction = userReaction;
+    const newCounts = { ...reactionCounts };
+
+    if (prevReaction === type) {
+      newCounts[type] = Math.max(0, (newCounts[type] || 0) - 1);
+      setUserReaction(null);
+    } else {
+      if (prevReaction) newCounts[prevReaction] = Math.max(0, (newCounts[prevReaction] || 0) - 1);
+      newCounts[type] = (newCounts[type] || 0) + 1;
+      setUserReaction(type);
+    }
+    setReactionCounts(newCounts);
+
     try {
       const data = await reactToPost(post._id, type);
       setReactionCounts(data.reactionCounts);
       setUserReaction(data.userReaction);
     } catch (err) {
+      // Revert on error
+      setReactionCounts(prev);
+      setUserReaction(prevReaction);
       console.error(err);
     }
   };
@@ -42,6 +60,8 @@ const PostCard = ({ post, sessionId, onDeleted }) => {
       setDeleting(false);
     }
   };
+
+  const isVideo = post.videoUrl || (post.imageUrl && post.imageUrl.includes('video'));
 
   return (
     <article
@@ -70,10 +90,8 @@ const PostCard = ({ post, sessionId, onDeleted }) => {
           </div>
         </div>
         {isOwner && (
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="p-1.5 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100"
+          <button onClick={handleDelete} disabled={deleting}
+            className="p-1.5 rounded-lg transition-all duration-200"
             style={{ color: '#6b6b8a', background: 'none', border: 'none', cursor: 'pointer' }}
             onMouseEnter={e => { e.currentTarget.style.color = '#ff6b6b'; e.currentTarget.style.background = 'rgba(255,107,107,0.1)'; }}
             onMouseLeave={e => { e.currentTarget.style.color = '#6b6b8a'; e.currentTarget.style.background = 'none'; }}
@@ -85,18 +103,31 @@ const PostCard = ({ post, sessionId, onDeleted }) => {
       </div>
 
       {/* Content */}
-      <p className="text-sm leading-relaxed mb-3 whitespace-pre-wrap break-words" style={{ color: '#d8d8e8', margin: '0 0 12px 0' }}>
+      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ color: '#d8d8e8', margin: '0 0 12px 0' }}>
         {post.content}
       </p>
 
       {/* Image */}
-      {post.imageUrl && (
-        <div className="mb-3 rounded-lg overflow-hidden cursor-pointer" onClick={() => setImgExpanded(v => !v)}>
+      {post.imageUrl && !post.videoUrl && (
+        <div className="mb-3 rounded-lg overflow-hidden cursor-pointer" onClick={() => setMediaExpanded(v => !v)}>
           <img
             src={post.imageUrl}
             alt="Post attachment"
             className="w-full object-cover transition-all duration-300"
-            style={{ maxHeight: imgExpanded ? 'none' : '240px', borderRadius: '8px' }}
+            style={{ maxHeight: mediaExpanded ? 'none' : '240px', borderRadius: '8px' }}
+            onError={e => e.target.style.display = 'none'}
+          />
+        </div>
+      )}
+
+      {/* Video */}
+      {post.videoUrl && (
+        <div className="mb-3 rounded-lg overflow-hidden">
+          <video
+            src={post.videoUrl}
+            controls
+            className="w-full rounded-lg"
+            style={{ maxHeight: '360px', background: '#000' }}
           />
         </div>
       )}
