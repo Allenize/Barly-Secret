@@ -28,14 +28,23 @@ router.get('/', async (req, res) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .lean({ virtuals: true }),
+        .lean(),
       Post.countDocuments({ isHidden: false }),
     ]);
 
-    const enriched = posts.map(post => ({
-      ...post,
-      userReaction: post.reactions?.find(r => r.sessionId === sessionId)?.type || null,
-    }));
+    const REACTION_TYPES = ['crazy', 'cop', 'hot', 'scared', 'suggestive'];
+
+    const enriched = posts.map(post => {
+      const counts = {};
+      REACTION_TYPES.forEach(t => { counts[t] = 0; });
+      (post.reactions || []).forEach(r => { if (counts[r.type] !== undefined) counts[r.type]++; });
+
+      return {
+        ...post,
+        reactionCounts: counts,
+        userReaction: (post.reactions || []).find(r => r.sessionId === sessionId)?.type || null,
+      };
+    });
 
     res.json({ posts: enriched, total, page, pages: Math.ceil(total / limit) });
   } catch (err) {
