@@ -6,7 +6,8 @@ import {
 } from 'lucide-react';
 import {
   adminFetchIPList, adminFetchPosts, adminBlockIP, adminUnblockIP,
-  adminRemoveUserContent, adminDeletePost, adminHidePost
+  adminRemoveUserContent, adminDeletePost, adminHidePost,
+  adminRevealPost, adminAnonymizePost,
 } from '../utils/api';
 
 const timeAgo = (date) => {
@@ -238,6 +239,26 @@ const AdminPage = () => {
     }
   };
 
+  const handleRevealPost = async (postId) => {
+    try {
+      const updated = await adminRevealPost(postId);
+      setPosts(prev => prev.map(p => p._id === postId ? { ...p, isRevealed: true, anonUsername: 'Barly' } : p));
+      showToast('Post revealed as Barly');
+    } catch (err) {
+      showToast('Failed to reveal post', 'error');
+    }
+  };
+
+  const handleAnonymizePost = async (postId) => {
+    try {
+      const updated = await adminAnonymizePost(postId);
+      setPosts(prev => prev.map(p => p._id === postId ? { ...p, isRevealed: false, anonUsername: updated.anonUsername } : p));
+      showToast('Post re-anonymized');
+    } catch (err) {
+      showToast('Failed to anonymize post', 'error');
+    }
+  };
+
   if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
 
   return (
@@ -414,7 +435,14 @@ const AdminPage = () => {
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono" style={{ color: '#7c6bff' }}>{post.anonUsername}</span>
+                        <span className="text-xs font-mono" style={{ color: post.isRevealed ? '#ffc832' : '#7c6bff' }}>
+                          {post.anonUsername}
+                        </span>
+                        {post.isRevealed && (
+                          <span className="px-1.5 py-0.5 rounded text-xs" style={{ background: 'rgba(255,200,50,0.1)', color: '#ffc832', border: '1px solid rgba(255,200,50,0.3)' }}>
+                            Revealed
+                          </span>
+                        )}
                         <span className="text-xs" style={{ color: '#3d3d5c' }}>·</span>
                         <code className="text-xs" style={{ color: '#6b6b8a' }}>{post.ipAddress}</code>
                         {post.isHidden && (
@@ -426,6 +454,25 @@ const AdminPage = () => {
                       <span className="text-xs" style={{ color: '#3d3d5c' }}>{timeAgo(post.createdAt)}</span>
                     </div>
                     <div className="flex gap-1.5 flex-shrink-0">
+                      {!post.isRevealed ? (
+                        <button
+                          onClick={() => handleRevealPost(post._id)}
+                          className="p-1.5 rounded-lg transition-all duration-200"
+                          style={{ background: 'rgba(255,200,50,0.1)', border: '1px solid rgba(255,200,50,0.3)', color: '#ffc832', cursor: 'pointer' }}
+                          title="Reveal as Barly"
+                        >
+                          <Eye size={13} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleAnonymizePost(post._id)}
+                          className="p-1.5 rounded-lg transition-all duration-200"
+                          style={{ background: 'rgba(107,107,138,0.1)', border: '1px solid rgba(107,107,138,0.3)', color: '#6b6b8a', cursor: 'pointer' }}
+                          title="Re-anonymize"
+                        >
+                          <EyeOff size={13} />
+                        </button>
+                      )}
                       {!post.isHidden && (
                         <button
                           onClick={() => handleHidePost(post._id)}

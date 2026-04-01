@@ -128,4 +128,34 @@ router.patch('/posts/:id/hide', async (req, res) => {
   }
 });
 
+// PATCH /api/admin/posts/:id/reveal — show as "Barly"
+router.patch('/posts/:id/reveal', async (req, res) => {
+  try {
+    const post = await Post.findByIdAndUpdate(
+      req.params.id,
+      { isRevealed: true, anonUsername: 'Barly' },
+      { new: true }
+    );
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/admin/posts/:id/anonymize — re-anonymize back
+router.patch('/posts/:id/anonymize', async (req, res) => {
+  try {
+    const adjectives = ['Silent', 'Phantom', 'Ghost', 'Shadow', 'Misty', 'Neon', 'Cosmic', 'Void', 'Cyber', 'Echo'];
+    const newName = `User_${Math.floor(1000 + Math.random() * 9000)}`;
+    const post = await Post.findByIdAndUpdate(
+      req.params.id,
+      { isRevealed: false, anonUsername: newName },
+      { new: true }
+    );
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

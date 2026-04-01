@@ -55,4 +55,10 @@ export const adminDeletePost = (postId) =>
 export const adminHidePost = (postId) =>
   api.patch(`/admin/posts/${postId}/hide`).then(r => r.data);
 
+export const adminRevealPost = (postId) =>
+  api.patch(`/admin/posts/${postId}/reveal`).then(r => r.data);
+
+export const adminAnonymizePost = (postId) =>
+  api.patch(`/admin/posts/${postId}/anonymize`).then(r => r.data);
+
 export default api;

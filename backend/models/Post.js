@@ -14,6 +14,7 @@ const postSchema = new mongoose.Schema({
   ipAddress: { type: String, required: true },
   imageUrl: { type: String, default: null },
   videoUrl: { type: String, default: null },
+  isRevealed: { type: Boolean, default: false },
   reactions: [reactionSchema],
   commentCount: { type: Number, default: 0 },
   isHidden: { type: Boolean, default: false },
