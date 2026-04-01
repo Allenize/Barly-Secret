@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import FeedPage from './pages/FeedPage';
 import AdminPage from './pages/AdminPage';
 import GhostLogo from './components/GhostLogo';
+import AnnouncementModal from './components/AnnouncementModal';
 
 const LoadingScreen = ({ onDone }) => {
   const [fade, setFade] = useState(false);
@@ -74,6 +75,7 @@ function App() {
   return (
     <>
       {!loaded && <LoadingScreen onDone={() => setLoaded(true)} />}
+      {loaded && <AnnouncementModal />}
       <div style={{ minHeight: '100vh', background: '#0a0a0f', opacity: loaded ? 1 : 0, transition: 'opacity 0.4s ease' }}>
         <Navbar onCreatePost={() => setShowCreate(true)} />
         <Routes>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Shield, Ban, Trash2, RefreshCw, Users, FileText,
+  Shield, Ban, Trash2, RefreshCw, Users, FileText, Image,
   ChevronDown, ChevronUp, AlertTriangle, CheckCircle,
   Eye, EyeOff, Clock, Activity
 } from 'lucide-react';
@@ -139,7 +139,8 @@ const PasswordGate = ({ onUnlock }) => {
 
 const AdminPage = () => {
   const [unlocked, setUnlocked] = useState(false);
-  const [tab, setTab] = useState('ips'); // 'ips' | 'posts'
+  const [tab, setTab] = useState('ips'); // 'ips' | 'posts' | 'banner'
+  const [bannerPreview, setBannerPreview] = useState(() => localStorage.getItem('bs_announcement_image') || null);
   const [ipList, setIpList] = useState([]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -268,6 +269,7 @@ const AdminPage = () => {
         {[
           { id: 'ips', label: 'IP Management', icon: Users },
           { id: 'posts', label: 'Post Monitor', icon: FileText },
+          { id: 'banner', label: 'Announcement', icon: Image },
         ].map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -455,6 +457,77 @@ const AdminPage = () => {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Banner Tab */}
+      {tab === 'banner' && (
+        <div>
+          <SectionHeader icon={Image} title="Announcement Banner" />
+          <div className="p-5 rounded-2xl" style={{ background: 'rgba(26,26,38,0.8)', border: '1px solid rgba(42,42,61,0.6)' }}>
+            <p className="text-sm mb-4" style={{ color: '#6b6b8a' }}>
+              Upload an image to show as a popup announcement to all users every time they visit the site.
+            </p>
+
+            {/* Preview */}
+            {bannerPreview && (
+              <div className="mb-4 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(124,107,255,0.3)' }}>
+                <img src={bannerPreview} alt="Banner preview" className="w-full object-cover" style={{ maxHeight: 280 }} />
+              </div>
+            )}
+
+            <div className="flex gap-3 flex-wrap">
+              <label style={{ cursor: 'pointer' }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                      const src = ev.target.result;
+                      setBannerPreview(src);
+                      localStorage.setItem('bs_announcement_image', src);
+                      showToast('Banner updated! Users will see it on next visit.');
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                <div
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(124,107,255,0.3), rgba(74,63,160,0.3))',
+                    border: '1px solid rgba(124,107,255,0.5)',
+                    color: '#9d8fff', cursor: 'pointer',
+                  }}
+                >
+                  <Image size={14} />
+                  {bannerPreview ? 'Change Image' : 'Upload Image'}
+                </div>
+              </label>
+
+              {bannerPreview && (
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('bs_announcement_image');
+                    setBannerPreview(null);
+                    showToast('Banner removed.', 'error');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
+                  style={{
+                    background: 'rgba(255,107,107,0.1)',
+                    border: '1px solid rgba(255,107,107,0.3)',
+                    color: '#ff6b6b', cursor: 'pointer',
+                  }}
+                >
+                  <Trash2 size={14} />
+                  Remove Banner
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
