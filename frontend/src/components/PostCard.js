@@ -14,15 +14,15 @@ const timeAgo = (date) => {
 };
 
 const PostCard = ({ post, sessionId, onDeleted }) => {
+  const reactionKey = `reaction_${post._id}`;
   const [reactionCounts, setReactionCounts] = useState(post.reactionCounts || {});
-  const [userReaction, setUserReaction] = useState(post.userReaction || null);
+  const [userReaction, setUserReaction] = useState(() => localStorage.getItem(reactionKey) || post.userReaction || null);
   const [commentCount, setCommentCount] = useState(post.commentCount || 0);
   const [deleting, setDeleting] = useState(false);
   const [mediaExpanded, setMediaExpanded] = useState(false);
   const isOwner = post.sessionId === sessionId;
 
   const handleReact = async (type) => {
-    // Optimistic update first
     const prevCounts = { ...reactionCounts };
     const prevReaction = userReaction;
     const newCounts = { ...reactionCounts };
@@ -30,26 +30,29 @@ const PostCard = ({ post, sessionId, onDeleted }) => {
     if (prevReaction === type) {
       newCounts[type] = Math.max(0, (newCounts[type] || 0) - 1);
       setUserReaction(null);
+      localStorage.removeItem(reactionKey);
     } else {
-      if (prevReaction) {
-        newCounts[prevReaction] = Math.max(0, (newCounts[prevReaction] || 0) - 1);
-      }
+      if (prevReaction) newCounts[prevReaction] = Math.max(0, (newCounts[prevReaction] || 0) - 1);
       newCounts[type] = (newCounts[type] || 0) + 1;
       setUserReaction(type);
+      localStorage.setItem(reactionKey, type);
     }
     setReactionCounts(newCounts);
 
     try {
       const data = await reactToPost(post._id, type);
-      // Only update if server returned valid counts
       if (data.reactionCounts && Object.keys(data.reactionCounts).length > 0) {
         setReactionCounts(data.reactionCounts);
       }
-      setUserReaction(data.userReaction ?? (prevReaction === type ? null : type));
+      const finalReaction = data.userReaction ?? (prevReaction === type ? null : type);
+      setUserReaction(finalReaction);
+      if (finalReaction) localStorage.setItem(reactionKey, finalReaction);
+      else localStorage.removeItem(reactionKey);
     } catch (err) {
-      // Revert on error
       setReactionCounts(prevCounts);
       setUserReaction(prevReaction);
+      if (prevReaction) localStorage.setItem(reactionKey, prevReaction);
+      else localStorage.removeItem(reactionKey);
       console.error(err);
     }
   };
