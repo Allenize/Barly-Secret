@@ -1,23 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Shield, Rss, PenSquare } from 'lucide-react';
+import GhostLogo from './GhostLogo';
 
 const Navbar = ({ onCreatePost }) => {
   const location = useLocation();
   const isAdmin = location.pathname === '/admin';
-  const [logoSrc, setLogoSrc] = useState(() => localStorage.getItem('bs_logo') || null);
-
-  const handleLogoUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const src = ev.target.result;
-      setLogoSrc(src);
-      localStorage.setItem('bs_logo', src);
-    };
-    reader.readAsDataURL(file);
-  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50" style={{
@@ -27,29 +15,11 @@ const Navbar = ({ onCreatePost }) => {
     }}>
       <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo + Name */}
-        <Link to="/" className="flex items-center gap-3 group no-underline">
-          <div className="relative">
-            {logoSrc ? (
-              <img src={logoSrc} alt="logo" className="w-8 h-8 rounded-lg object-cover" />
-            ) : (
-              <label className="cursor-pointer" title="Click to upload logo">
-                <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
-                  style={{ background: 'linear-gradient(135deg, #7c6bff, #4a3fa0)', boxShadow: '0 0 12px rgba(124,107,255,0.4)' }}>
-                  <span className="text-white text-xs font-bold font-mono">BS</span>
-                </div>
-              </label>
-            )}
-            {logoSrc && (
-              <label className="absolute -bottom-1 -right-1 cursor-pointer" title="Change logo">
-                <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-                <div className="w-4 h-4 rounded-full bg-accent flex items-center justify-center text-white text-xs">+</div>
-              </label>
-            )}
-          </div>
+        <Link to="/" className="flex items-center gap-2 group no-underline">
+          <GhostLogo size={32} />
           <div>
             <span className="font-display font-bold text-lg tracking-tight text-white leading-none">
-              Barly <span style={{ color: '#7c6bff' }}>Secret</span>
+              Barly <span style={{ color: '#7c3aed' }}>Secret</span>
             </span>
           </div>
         </Link>
